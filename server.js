@@ -14,8 +14,7 @@ mongoose
   .then((conn) => {
     // console.log(conn.connections);
     console.log("Connected with the DATABASE");
+    app.listen(process.env.PORT || 3000, () => {
+      console.log(`Server Running on PORT ${process.env.PORT || 3000}`);
+    });
   });
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server Running on PORT 3000");
-});
