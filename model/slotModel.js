@@ -17,12 +17,10 @@ const slotSchema = new mongoose.Schema({
   isOccupied: {
     type: Boolean,
     default: false,
-    // required: [true, "A slot must be either occupied or empty"],
   },
   isAssigned: {
     type: Boolean,
     default: false,
-    // required: [true, "A slot must be either assigned or empty"],
   },
   location: {
     type: {
@@ -33,7 +31,7 @@ const slotSchema = new mongoose.Schema({
     coordinates: [Number],
   },
 });
-slotSchema.index({ parkingName: 1, floor: 1, slotNumber: 1 }, { unique: true });
+slotSchema.index({ parkingId: 1, floor: 1, slotNumber: 1 }, { unique: true });
 
 const Slot = mongoose.model("Slot", slotSchema);
 module.exports = Slot;

@@ -6,7 +6,7 @@ const transactionSchema = new mongoose.Schema({
   slot: {
     type: mongoose.Schema.ObjectId,
     ref: Slot,
-    required: [true, "A transaction must have A SlotId"],
+    // required: [true, "A transaction must have A SlotId"],
   },
   user: {
     type: mongoose.Schema.ObjectId,
@@ -19,6 +19,13 @@ const transactionSchema = new mongoose.Schema({
   inTime: {
     type: String,
     default: new Date().toISOString(),
+  },
+  outTime: {
+    type: String,
+  },
+  isComplete: {
+    type: Boolean,
+    default: false,
   },
 });
 

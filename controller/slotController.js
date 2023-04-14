@@ -4,6 +4,11 @@ const catchAsync = require("../util/catchAsync");
 const AppError = require("../util/appError");
 
 exports.createSlot = catchAsync(async (req, res, next) => {
+  // check parking slots id is valid or not
+  let result = await ParkingName.find({ _id: req.body.parkingId });
+  if (!result.length) {
+    return next(new AppError("Parking Id is not valid", 400));
+  }
   const newSlot = await Slot.create(req.body);
   res.status(201).json({
     status: "Success",
@@ -51,7 +56,7 @@ exports.getASlot = catchAsync(async (req, res, next) => {
 exports.updateOccupancy = catchAsync(async (req, res, next) => {
   const isOccupied = {};
   isOccupied.isOccupied = req.body.isOccupied;
-  const slot = await Slot.findByIdAndUpdate(req.params.id, isOccupied, { new: true, runValidators: true }).populate(
+  const slot = await Slot.findByIdAndUpdate(req.body.slotId, isOccupied, { new: true, runValidators: true }).populate(
     "parkingId"
   );
   if (!slot) {
@@ -68,7 +73,7 @@ exports.updateOccupancy = catchAsync(async (req, res, next) => {
 exports.updateAssigned = catchAsync(async (req, res, next) => {
   const isAssigned = {};
   isAssigned.isAssigned = req.body.isAssigned;
-  const slot = await Slot.findByIdAndUpdate(req.params.id, isAssigned, { new: true, runValidators: true }).populate(
+  const slot = await Slot.findByIdAndUpdate(req.body.slotId, isAssigned, { new: true, runValidators: true }).populate(
     "parkingId"
   );
   if (!slot) {

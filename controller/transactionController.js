@@ -18,25 +18,50 @@ exports.getAllTransaction = catchAsync(async (ref, res, next) => {
 });
 
 exports.createATransaction = catchAsync(async (req, res, next) => {
-  let slot = await Slot.findById(req.body.slot);
-
-  //   find correct slot
-  if (!slot) {
-    return next(new AppError("Please enter correct Slot ID", 400));
-  } else if (slot.isOccupied) {
-    return next(new AppError("Slot is already Occupied", 400));
+  let slot;
+  if (req.body.slot) {
+    // slot is given in body
+    slot = await Slot.findById(req.body.slot);
+    if (!slot) {
+      return next(new AppError("Please enter correct Slot ID", 400));
+    } else if (slot.isOccupied) {
+      return next(new AppError("Slot is already Occupied", 400));
+    } else {
+      slot = req.body.slot;
+    }
   } else {
-    // UPDATE slot as occupied
-    slot = await Slot.findByIdAndUpdate(req.body.slot, { isOccupied: true }, { new: true, runValidators: true });
+    // slot is not given in body so assign a slot
+    slot = await Slot.find({ isOccupied: false, isAssigned: false });
+    if (!slot) {
+      return next(new AppError("No slots are available", 400));
+    } else {
+      slot = slot[0]._id;
+    }
   }
-
-  const transaction = await Transaction.create({
-    slot: req.body.slot,
-    vehicleNo: req.body.vehicleNo,
-  });
+  // UPDATE slot as occupied
+  slot = await Slot.findByIdAndUpdate(slot, { isOccupied: true }, { new: true, runValidators: true });
 
   //   find if the vehicle is registered or not
+  // if user is a registered user then update the user field in the transaction
   const user = await User.find({ vehicleNo: req.body.vehicleNo });
+  // console.log(user);
+  let body;
+  if (user.length) {
+    body = {
+      slot: slot,
+      vehicleNo: req.body.vehicleNo,
+      user: user[0]._id,
+      inTime: new Date().toISOString(),
+    };
+  } else {
+    body = {
+      slot: slot,
+      vehicleNo: req.body.vehicleNo,
+      inTime: new Date().toISOString(),
+    };
+  }
+  const transaction = await Transaction.create(body);
+
   res.status(200).json({
     status: "Success",
     message: !user.length ? "Not Registered" : "Registered",
@@ -55,13 +80,15 @@ exports.deleteTransaction = catchAsync(async (req, res, next) => {
     return next(new AppError("this Vehicle is not parked, Please Check Vehicle no", 400));
   }
 
+  // find the slot which is involved in this transaction and update occupancy as false
   const slot = await Slot.findByIdAndUpdate(
     transaction[0].slot,
     { isOccupied: false },
     { new: true, runValidators: true }
   );
 
-  await Transaction.findByIdAndDelete(transaction[0]._id);
+  // Update the transaction as complete;
+  await Transaction.findByIdAndUpdate(transaction[0]._id, { isComplete: true });
   res.status(204).json({
     status: "Success",
     data: {
@@ -73,8 +100,10 @@ exports.deleteTransaction = catchAsync(async (req, res, next) => {
 exports.getPayment = catchAsync(async (req, res, next) => {
   const transaction = await Transaction.find({
     vehicleNo: req.params.vehicleNo,
+    isComplete: false,
   });
 
+  // transaction not found
   if (!transaction.length) {
     return next(new AppError("Please Enter Correct Vehicle No", 400));
   }
@@ -82,33 +111,26 @@ exports.getPayment = catchAsync(async (req, res, next) => {
   let inTime = new Date(transaction[0].inTime).getTime();
   let outTime = new Date().getTime();
   let stayTime = (outTime - inTime) / (1000 * 60 * 60); // In HOURS
-  const Amount = Number(stayTime * 5).toFixed(2);
-  // console.log(stayTime, "hours");
+  console.log(stayTime);
   // PAYMENT 5rs per Hours
+  const Amount = Number(stayTime * 5).toFixed(2);
 
-  // Delete Current Transaction and Update Slot
-  // await Transaction.findByIdAndDelete(transaction[0]._id);
-  // const slot = await Slot.findByIdAndUpdate(
-  //   transaction[0].slot,
-  //   { isOccupied: false },
-  //   { new: true, runValidators: true }
-  // );
-
-  // Add current Transaction to user transaction is User IS REGISTERED
-  const user = await User.find({ vehicleNo: transaction[0].vehicleNo });
-  // console.log(user, transaction[0].vehicleNo);
-  if (user.length) {
-    await UserTransaction.create({
-      user: user[0]._id,
-      vehicleNo: transaction[0].vehicleNo,
-      amount: Amount,
-      Date: new Date().toISOString(),
-    });
-  }
+  // Update Current Transaction
+  await Transaction.findByIdAndUpdate(transaction[0]._id, {
+    outTime: new Date().toISOString(),
+    isComplete: true,
+  });
+  // Update the current slot as unoccupied
+  const slot = await Slot.findByIdAndUpdate(
+    transaction[0].slot,
+    { isOccupied: false },
+    { new: true, runValidators: true }
+  );
 
   res.status(200).json({
     status: "Success",
     data: {
+      vehicleNo: req.params.vehicleNo,
       data: {
         Amount,
         Currency: "Indian Rupee",
