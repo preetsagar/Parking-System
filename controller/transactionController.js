@@ -2,6 +2,7 @@ const Slot = require("../model/slotModel");
 const Transaction = require("../model/transactionModel");
 const User = require("../model/userModel");
 const UserTransaction = require("../model/userTransactionHistoryModel");
+const slotRoute = require("../route/slotRoute");
 
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
@@ -19,6 +20,7 @@ exports.getAllTransaction = catchAsync(async (ref, res, next) => {
 
 exports.createATransaction = catchAsync(async (req, res, next) => {
   let slot;
+  let slotDetails;
   if (req.body.slot) {
     // slot is given in body
     slot = await Slot.findById(req.body.slot);
@@ -30,11 +32,18 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
       slot = req.body.slot;
     }
   } else {
+    // check weather the vehicle is alraedy parked or not
+    const data = await Transaction.findOne({ vehicleNo: req.body.vehicleNo, isComplete: false });
+    if (data) {
+      return next(new AppError("This vehicle is already parked", 400));
+    }
+
     // slot is not given in body so assign a slot
     slot = await Slot.find({ isOccupied: false, isAssigned: false });
     if (!slot) {
       return next(new AppError("No slots are available", 400));
     } else {
+      slotDetails = slot[0];
       slot = slot[0]._id;
     }
   }
@@ -60,13 +69,15 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
       inTime: new Date().toISOString(),
     };
   }
-  const transaction = await Transaction.create(body);
+  let transaction = {};
+  transaction = await Transaction.create(body);
+  console.log(transaction);
 
   res.status(200).json({
     status: "Success",
     message: !user.length ? "Not Registered" : "Registered",
     data: {
-      data: transaction,
+      data: { ...transaction._doc, floor: slotDetails.floor, slotNumber: slotDetails.slotNumber },
     },
   });
 });
@@ -136,5 +147,28 @@ exports.getPayment = catchAsync(async (req, res, next) => {
         Currency: "Indian Rupee",
       },
     },
+  });
+});
+
+exports.getCurrentSlot = catchAsync(async (req, res, next) => {
+  const user = await User.findOne({ _id: req.params.userId });
+  let transaction = user.vehicleNo.map(async (no) => {
+    return await Transaction.findOne({
+      vehicleNo: no,
+      isComplete: false,
+    });
+  });
+
+  transaction = (await Promise.all(transaction))
+    .filter((ele) => ele !== null)
+    .map(async (ele) => {
+      const slot = await Slot.findOne({ _id: ele.slot });
+      return slot;
+    });
+  const slot = await Promise.all(transaction);
+
+  res.status(200).json({
+    status: "Success",
+    data: slot,
   });
 });
