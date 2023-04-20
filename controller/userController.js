@@ -1,3 +1,4 @@
+const Transaction = require("../model/transactionModel");
 const UserTransaction = require("../model/userTransactionHistoryModel");
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
@@ -67,8 +68,8 @@ exports.getAUser = catchAsync(async (req, res, next) => {
 });
 
 exports.getTransactionHistiory = catchAsync(async (req, res, next) => {
-  const userTransaction = await UserTransaction.find({ user: req.params.id });
-
+  const userTransaction = await Transaction.find({ user: req.params.id });
+  // console.log(userTransaction);
   res.status(200).json({
     status: "Success",
     result: userTransaction.length,
