@@ -9,6 +9,9 @@ route.route("/:id").get(userController.getAUser);
 route.route("/getTransactionHistory/:id").get(userController.getTransactionHistiory);
 route.route("/addMoneyToWallet").post(userController.addMoneyToWallet);
 
+route.route("/addVehicle").post(userController.addVehicle);
+// route.route("/addMoneyToWallet").post(userController.addMoneyToWallet);
+
 route.route("/signUp").post(authController.signUp);
 route.route("/login").post(authController.login);
 

@@ -99,3 +99,28 @@ exports.addMoneyToWallet = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.addVehicle = catchAsync(async (req, res, next) => {
+  const { userId, vehicleNo } = req.body;
+
+  let user = await User.findOne({ _id: userId });
+  if (!user) {
+    return next(new AppError("Please Enter correct userId", 400));
+  }
+
+  const vehicle = await User.findOne({ vehicleNo: vehicleNo });
+  if (vehicle) {
+    return next(new AppError("Vehicle is already Registered", 400));
+  }
+
+  const newData = user.vehicleNo;
+  newData.push(vehicleNo);
+  user = await User.findOneAndUpdate({ _id: userId }, { vehicleNo: newData }, { new: true });
+
+  res.status(200).json({
+    status: "Success",
+    data: {
+      data: user,
+    },
+  });
+});
