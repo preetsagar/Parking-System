@@ -27,6 +27,9 @@ const transactionSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  amount: {
+    type: Number,
+  },
 });
 
 const Transaction = mongoose.model("Transaction", transactionSchema);

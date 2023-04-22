@@ -48,7 +48,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({vehicleNo : '<%= data.vehicleNo %>'})
+                    body: JSON.stringify({vehicleNo : '<%= data.vehicleNo %>', amount: '<%= data.amount/100 %>'})
                 })
                 .then(response=>response.text())
                 .then(response=>{

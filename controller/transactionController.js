@@ -176,10 +176,10 @@ exports.getPayment = catchAsync(async (req, res, next) => {
 
   let inTime = new Date(transaction[0].inTime).getTime();
   let outTime = new Date().getTime();
-  let stayTime = (outTime - inTime) / (1000 * 60 * 60); // In HOURS
+  let stayTime = (outTime - inTime) / 1000; // In HOURS
   console.log(stayTime);
-  // PAYMENT 5rs per Hours
-  let Amount = Number(stayTime * 5).toFixed(2);
+  // PAYMENT 1rs per sec
+  let Amount = Number(stayTime * 1).toFixed(2);
 
   Amount = Math.max(Amount, 5);
 
@@ -226,6 +226,7 @@ exports.getPayment = catchAsync(async (req, res, next) => {
 
 exports.updateTransactionAndSlotAsUnoccupied = catchAsync(async (req, res, next) => {
   let vehicleNo = req.body.vehicleNo;
+  const amount = req.body.amount;
   const transaction = await Transaction.find({
     vehicleNo: vehicleNo,
     isComplete: false,
@@ -234,6 +235,7 @@ exports.updateTransactionAndSlotAsUnoccupied = catchAsync(async (req, res, next)
   // Update Current Transaction as Complete
   await Transaction.findByIdAndUpdate(transaction[0]._id, {
     outTime: new Date().toISOString(),
+    amount: amount,
     isComplete: true,
   });
 
