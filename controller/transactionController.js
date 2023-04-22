@@ -53,7 +53,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
   slot = await Slot.findByIdAndUpdate(slot, { isOccupied: true }, { new: true, runValidators: true });
 
   //   find if the vehicle is registered or not
-  // if user is a registered user then update the user field in the transaction
+  //   if user is a registered user then update the user field in the transaction
   const user = await User.find({ vehicleNo: req.body.vehicleNo });
   // console.log(user);
   let body;

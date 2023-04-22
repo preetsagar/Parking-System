@@ -39,3 +39,18 @@ exports.signUp = catchAsync(async (req, res, next) => {
       return next(new AppError("Vehicle Already Registered", 400));
     });
 });
+
+exports.login = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email: email, Passsword: password });
+  if (!user) {
+    return next(new AppError("Please Enter correct email and password", 401));
+  } else {
+    return res.status(200).json({
+      status: "Success",
+      data: {
+        data: user,
+      },
+    });
+  }
+});

@@ -20,9 +20,10 @@ const handleDevelopmentError = (err, req, res, next) => {
 };
 
 const handleProductionError = (err, req, res, next) => {
+  // console.error("err hoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo gya");
   const statusCode = err.statusCode || 500;
   const status = err.status || "Error";
-  const message = err.message || "Not Operational Error- in dev env";
+  const message = err.message || "Not Operational Error - PRODUCTION";
   return res.status(statusCode).json({
     status: status,
     data: {
@@ -32,14 +33,14 @@ const handleProductionError = (err, req, res, next) => {
 };
 
 const handleGlobalError = (err, req, res, next) => {
-  // console.log(err);
   if (process.env.NODE_ENV === "DEVELOPMENT") {
     handleDevelopmentError(err, req, res, next);
   }
 
   if (process.env.NODE_ENV === "PRODUCTION") {
     if (err.isOperational) {
-      return res.status(err.statusCode).json({
+      // console.error("err hoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo gya");
+      return res.status(err.statusCode || 400).json({
         status: err.status,
         data: {
           message: err.message,

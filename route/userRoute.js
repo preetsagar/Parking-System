@@ -11,6 +11,6 @@ route.route("/getTransactionHistory/:id").get(userController.getTransactionHisti
 route.route("/:id").get(userController.getAUser);
 
 route.route("/signUp").post(authController.signUp);
-// route.route("/login");
+route.route("/login").post(authController.login);
 
 module.exports = route;
