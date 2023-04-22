@@ -68,7 +68,7 @@ exports.getAUser = catchAsync(async (req, res, next) => {
 });
 
 exports.getTransactionHistiory = catchAsync(async (req, res, next) => {
-  const userTransaction = await Transaction.find({ user: req.params.id });
+  const userTransaction = await Transaction.find({ user: req.params.id, isComplete: true });
   // console.log(userTransaction);
   res.status(200).json({
     status: "Success",
