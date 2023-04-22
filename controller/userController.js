@@ -124,3 +124,22 @@ exports.addVehicle = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.removeVehicle = catchAsync(async (req, res, next) => {
+  const { userId, vehicleNo } = req.body;
+
+  let user = await User.findOne({ _id: userId, vehicleNo: vehicleNo });
+  if (!user) {
+    return next(new AppError("Please Enter correct details", 400));
+  }
+
+  const newData = user.vehicleNo.filter((vehicle) => vehicle !== vehicleNo);
+  user = await User.findOneAndUpdate({ _id: userId }, { vehicleNo: newData }, { new: true });
+
+  res.status(200).json({
+    status: "Success",
+    data: {
+      data: user,
+    },
+  });
+});

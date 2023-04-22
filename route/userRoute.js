@@ -10,7 +10,7 @@ route.route("/getTransactionHistory/:id").get(userController.getTransactionHisti
 route.route("/addMoneyToWallet").post(userController.addMoneyToWallet);
 
 route.route("/addVehicle").post(userController.addVehicle);
-// route.route("/addMoneyToWallet").post(userController.addMoneyToWallet);
+route.route("/removeVehicle").post(userController.removeVehicle);
 
 route.route("/signUp").post(authController.signUp);
 route.route("/login").post(authController.login);
