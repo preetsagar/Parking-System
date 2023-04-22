@@ -8,6 +8,7 @@ const transactionRoute = require("./route/transactionRoute");
 const Razorpay = require("razorpay");
 const gateOpen = require("./gateOpen");
 const gateRoute = require("./route/gateRoute");
+const cors = require("cors");
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use(morgan("dev"));
 app.use(express.json());
 // Defining the view Engine
 app.set("view engine", "ejs");
+// allow from local server
+app.use(cors());
 
 var instance = new Razorpay({
   key_id: "rzp_test_Oi69HJagINaREZ",
