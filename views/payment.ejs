@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- <script src="./../gateOpen.js"></script> -->
+    <title>Payment Page</title>
+</head>
+<body style="background: #c7c5fb; display: flex; justify-content: center; align-items: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <div>
+        <div style="display: flex; flex-direction: column; background: #ffffff; justify-content: center; align-items: center; padding: 50px; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);">
+            <h2 >Razorpay Payment</h2>
+            <br/>
+            <div>Your Payment/Order ID for vehicle No <span style="font-weight: 800;"><%= data.vehicleNo %></span> </div>
+            <div>is <span style="font-weight: 600;"><%= data.id %></span></div>
+            <h3> <%= data.amount/100 %> Rs.</h3>
+            <button id="rzp-button1" style="font-size: medium; padding: 10px; cursor: pointer; background: #a86aff; color: #ffffff;border-radius: 4px; border: none; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);">Pay with Razorpay</button>
+        </div>
+    </div>
+
+    <script>
+        var options = {
+            "key": "rzp_test_Oi69HJagINaREZ",
+            "amount": '<%= data.amount %>',
+            "currency": "INR",
+            "order_id": '<%= data.id %>', // Pass the `id` obtained in the response for creatung order
+            
+            "handler": function (response){
+                console.log('Payment ID - ',response.razorpay_payment_id, 'Order ID',response.razorpay_order_id, 'Signature ID',response.razorpay_signature)
+
+                alert("Payment Successful, You can close this tab");
+
+                console.warn(`In production, change the base url in payment.ejs from http://127.0.0.1:4000/api/v1/gate/open to https://prickly-cummerbund-lamb.cyclic.app/api/v1/gate/open`)
+                
+                // Update the Open variable in Gate
+                fetch("http://127.0.0.1:4000/api/v1/gate/open")
+                .then(response=>response.text())
+                .then(response=>{
+                    console.log(response);
+                })
+                .catch(err=>console.log(err))
+
+                // Update the Transaction and Slot
+                fetch("http://127.0.0.1:4000/api/v1/transactions/updateTransactionAndSlotAsUnoccupied", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({vehicleNo : '<%= data.vehicleNo %>'})
+                })
+                .then(response=>response.text())
+                .then(response=>{
+                    console.log(response);
+                })
+                .catch(err=>console.log(err))
+            },
+           "cancel": function() {
+                // This function will be called when the payment is cancelled
+                console.log('Payment cancelled');
+            }
+        };
+        console.log(options)
+        var rzp1 = new Razorpay(options);
+
+        rzp1.on('payment.failed', function (response){
+                alert(response.error.code);
+                alert(response.error.description);
+                alert(response.error.source);
+                alert(response.error.step); 
+                alert(response.error.reason);
+                alert(response.error.metadata.order_id);
+                alert(response.error.metadata.payment_id);
+        });
+        document.getElementById('rzp-button1').onclick = function(e){
+            rzp1.open();
+            e.preventDefault();
+        }
+    </script>
+</body>
+</html>

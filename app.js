@@ -5,6 +5,9 @@ const handleGloalError = require("./controller/globalErrorController");
 const parkingNameRoute = require("./route/parkingNameRoute");
 const userRoute = require("./route/userRoute");
 const transactionRoute = require("./route/transactionRoute");
+const Razorpay = require("razorpay");
+const gateOpen = require("./gateOpen");
+const gateRoute = require("./route/gateRoute");
 
 const app = express();
 
@@ -13,11 +16,27 @@ const app = express();
 app.use(morgan("dev"));
 // add the body to the req.body
 app.use(express.json());
+// Defining the view Engine
+app.set("view engine", "ejs");
+
+var instance = new Razorpay({
+  key_id: "rzp_test_Oi69HJagINaREZ",
+  key_secret: "V8bz7OLp4lriREQl4xDPsSEa",
+});
+
+// app.get("/", function (req, res, next) {
+//   res.json({ gateOpen });
+// });
 
 app.use("/api/v1/slots", slotRoute);
 app.use("/api/v1/parkingNames", parkingNameRoute);
 app.use("/api/v1/users", userRoute);
 app.use("/api/v1/transactions", transactionRoute);
+app.use("/api/v1/gate", gateRoute);
+
+// app.get("/api/v1/payment", function (req, res) {
+//   res.render("payment");
+// });
 
 // Handling Global Error
 app.use(handleGloalError);

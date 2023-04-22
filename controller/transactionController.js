@@ -3,6 +3,7 @@ const Transaction = require("../model/transactionModel");
 const User = require("../model/userModel");
 const UserTransaction = require("../model/userTransactionHistoryModel");
 const slotRoute = require("../route/slotRoute");
+const Razorpay = require("razorpay");
 
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
@@ -108,48 +109,6 @@ exports.deleteTransaction = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getPayment = catchAsync(async (req, res, next) => {
-  const transaction = await Transaction.find({
-    vehicleNo: req.params.vehicleNo,
-    isComplete: false,
-  });
-
-  // transaction not found
-  if (!transaction.length) {
-    return next(new AppError("Please Enter Correct Vehicle No", 400));
-  }
-
-  let inTime = new Date(transaction[0].inTime).getTime();
-  let outTime = new Date().getTime();
-  let stayTime = (outTime - inTime) / (1000 * 60 * 60); // In HOURS
-  console.log(stayTime);
-  // PAYMENT 5rs per Hours
-  const Amount = Number(stayTime * 5).toFixed(2);
-
-  // Update Current Transaction
-  await Transaction.findByIdAndUpdate(transaction[0]._id, {
-    outTime: new Date().toISOString(),
-    isComplete: true,
-  });
-  // Update the current slot as unoccupied
-  const slot = await Slot.findByIdAndUpdate(
-    transaction[0].slot,
-    { isOccupied: false },
-    { new: true, runValidators: true }
-  );
-
-  res.status(200).json({
-    status: "Success",
-    data: {
-      vehicleNo: req.params.vehicleNo,
-      data: {
-        Amount,
-        Currency: "Indian Rupee",
-      },
-    },
-  });
-});
-
 exports.getCurrentSlot = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ _id: req.params.userId });
   let transaction = user.vehicleNo.map(async (no) => {
@@ -171,4 +130,118 @@ exports.getCurrentSlot = catchAsync(async (req, res, next) => {
     status: "Success",
     data: slot,
   });
+});
+
+exports.createRazorPayOrder = catchAsync(async (req, res, next) => {
+  var instance = new Razorpay({ key_id: "rzp_test_Oi69HJagINaREZ", key_secret: "V8bz7OLp4lriREQl4xDPsSEa" });
+
+  const { amount } = req.body;
+
+  var options = {
+    amount: amount * 100, // amount in the Paisa
+    currency: "INR",
+  };
+  // console.log(options);
+  let response;
+  instance.orders.create(options, function (err, order) {
+    if (err) {
+      // console.log(err);
+      response = err;
+      res.status(400).json({
+        status: "Fail",
+        data: response,
+      });
+    } else {
+      // console.log(order);
+      response = order;
+      res.status(201).json({
+        status: "Success",
+        data: response,
+      });
+    }
+  });
+});
+
+exports.getPayment = catchAsync(async (req, res, next) => {
+  const transaction = await Transaction.find({
+    vehicleNo: req.params.vehicleNo,
+    isComplete: false,
+  });
+
+  // transaction not found
+  if (!transaction.length) {
+    return next(new AppError("Please Enter Correct Vehicle No", 400));
+  }
+
+  let inTime = new Date(transaction[0].inTime).getTime();
+  let outTime = new Date().getTime();
+  let stayTime = (outTime - inTime) / (1000 * 60 * 60); // In HOURS
+  console.log(stayTime);
+  // PAYMENT 5rs per Hours
+  let Amount = Number(stayTime * 5).toFixed(2);
+
+  Amount = Math.max(Amount, 5);
+
+  // After Getting the Amount Create a order in RAZORPAY
+  var instance = new Razorpay({ key_id: "rzp_test_Oi69HJagINaREZ", key_secret: "V8bz7OLp4lriREQl4xDPsSEa" });
+
+  var options = {
+    amount: Number(Amount) * 100, // amount in the Paisa
+    currency: "INR",
+  };
+  // console.log(options);
+
+  // // Update Current Transaction
+  // await Transaction.findByIdAndUpdate(transaction[0]._id, {
+  //   outTime: new Date().toISOString(),
+  //   isComplete: true,
+  // });
+  // // Update the current slot as unoccupied
+  // const slot = await Slot.findByIdAndUpdate(
+  //   transaction[0].slot,
+  //   { isOccupied: false },
+  //   { new: true, runValidators: true }
+  // );
+
+  let response;
+  instance.orders.create(options, function (err, order) {
+    if (err) {
+      // console.log(err);
+      response = err;
+      res.status(400).json({
+        status: "Fail",
+        data: response,
+      });
+    } else {
+      // console.log(order);
+      response = order;
+      response.amount = Amount * 100;
+      response.vehicleNo = req.params.vehicleNo;
+      // RENDER the PAYMENT PAGE
+      res.render("payment", { data: response });
+    }
+  });
+});
+
+exports.updateTransactionAndSlotAsUnoccupied = catchAsync(async (req, res, next) => {
+  let vehicleNo = req.body.vehicleNo;
+  const transaction = await Transaction.find({
+    vehicleNo: vehicleNo,
+    isComplete: false,
+  });
+
+  // Update Current Transaction as Complete
+  await Transaction.findByIdAndUpdate(transaction[0]._id, {
+    outTime: new Date().toISOString(),
+    isComplete: true,
+  });
+
+  // Update the current slot as unoccupied
+  const slot = await Slot.findByIdAndUpdate(
+    transaction[0].slot,
+    { isOccupied: false },
+    { new: true, runValidators: true }
+  );
+
+  res.status(200).json({ status: "Success" });
 });
