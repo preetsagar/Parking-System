@@ -22,6 +22,13 @@ exports.getAllTransaction = catchAsync(async (ref, res, next) => {
 exports.createATransaction = catchAsync(async (req, res, next) => {
   let slot;
   let slotDetails;
+
+  // check weather the vehicle is alraedy parked or not
+  const data = await Transaction.findOne({ vehicleNo: req.body.vehicleNo, isComplete: false });
+  if (data) {
+    return next(new AppError("This vehicle is already parked", 400));
+  }
+
   if (req.body.slot) {
     // slot is given in body
     slot = await Slot.findById(req.body.slot);
@@ -33,15 +40,9 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
       slot = req.body.slot;
     }
   } else {
-    // check weather the vehicle is alraedy parked or not
-    const data = await Transaction.findOne({ vehicleNo: req.body.vehicleNo, isComplete: false });
-    if (data) {
-      return next(new AppError("This vehicle is already parked", 400));
-    }
-
     // slot is not given in body so assign a slot
     slot = await Slot.find({ isOccupied: false, isAssigned: false });
-    if (!slot) {
+    if (!slot.length) {
       return next(new AppError("No slots are available", 400));
     } else {
       slotDetails = slot[0];

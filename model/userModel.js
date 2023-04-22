@@ -20,6 +20,13 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  Passsword: {
+    type: String,
+    required: [true, "A user must have a password"],
+  },
+  mobileNo: {
+    type: Number,
+  },
 });
 
 const User = mongoose.model("User", userSchema);
