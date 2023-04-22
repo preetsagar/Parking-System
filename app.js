@@ -36,6 +36,9 @@ app.use("/api/v1/parkingNames", parkingNameRoute);
 app.use("/api/v1/users", userRoute);
 app.use("/api/v1/transactions", transactionRoute);
 app.use("/api/v1/gate", gateRoute);
+app.get("/success-page", function (req, res, next) {
+  res.render("success-page");
+});
 
 // app.get("/api/v1/payment", function (req, res) {
 //   res.render("payment");
