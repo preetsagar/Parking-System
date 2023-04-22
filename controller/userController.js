@@ -81,7 +81,7 @@ exports.getTransactionHistiory = catchAsync(async (req, res, next) => {
 
 exports.addMoneyToWallet = catchAsync(async (req, res, next) => {
   const { userId, amount } = req.body;
-  console.log(userId, amount);
+  // console.log(userId, amount);
   let user = await User.findOne({ _id: userId });
   if (!user) {
     return next(new AppError("Please enter correct User Id", 400));
