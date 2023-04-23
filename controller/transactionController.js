@@ -4,6 +4,7 @@ const User = require("../model/userModel");
 const UserTransaction = require("../model/userTransactionHistoryModel");
 const slotRoute = require("../route/slotRoute");
 const Razorpay = require("razorpay");
+const axios = require("axios");
 
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
@@ -29,6 +30,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
     return next(new AppError("This vehicle is already parked", 400));
   }
 
+  //  IF Slot no is provided in body
   if (req.body.slot) {
     // slot is given in body
     slot = await Slot.findById(req.body.slot);
@@ -49,11 +51,11 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
       slot = slot[0]._id;
     }
   }
-  // UPDATE slot as occupied
-  slot = await Slot.findByIdAndUpdate(slot, { isAssigned: true }, { new: true, runValidators: true });
 
-  //   find if the vehicle is registered or not
-  //   if user is a registered user then update the user field in the transaction
+  // UPDATE slot as occupied
+  slot = await Slot.findByIdAndUpdate(slot, { isOccupied: true }, { new: true, runValidators: true });
+
+  //   find if the vehicle is registered or not if user is a registered user then update the user field in the transaction
   const user = await User.find({ vehicleNo: req.body.vehicleNo });
   // console.log(user);
   let body;
@@ -71,10 +73,35 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
       inTime: new Date().toISOString(),
     };
   }
+  // CREATE a transation
   let transaction = {};
   transaction = await Transaction.create(body);
   console.log(transaction);
 
+  // Call API for gate open
+  let data1 = JSON.stringify({
+    value: "OPEN",
+  });
+  let config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
+    headers: {
+      "X-AIO-Key": "aio_rrRV57lj8Xb1KvbjafTkhp0wWj20",
+      "Content-Type": "application/json",
+    },
+    data: data1,
+  };
+  axios
+    .request(config)
+    .then((response) => {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+
+  // SEND the response
   res.status(200).json({
     status: "Success",
     message: !user.length ? "Not Registered" : "Registered",
