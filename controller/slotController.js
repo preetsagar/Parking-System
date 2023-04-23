@@ -121,3 +121,20 @@ exports.getAllEmptySlots = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.updateAllSlots = catchAsync(async (req, res, next) => {
+  const data = req.body;
+  Object.keys(data).forEach(async (slot) => {
+    if (data[slot]) {
+      await Slot.findOneAndUpdate({ slotNumber: slot }, { isOccupied: true, isAssigned: false });
+    } else {
+      await Slot.findOneAndUpdate({ slotNumber: slot, isAssigned: false }, { isOccupied: false, isAssigned: false });
+    }
+  });
+  // console.log(Object.keys(data));
+  // console.log(data);
+  res.status(200).json({
+    staus: "Success",
+    data: "Updated Successhully",
+  });
+});

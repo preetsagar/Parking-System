@@ -3,6 +3,7 @@ const slotController = require("../controller/slotController");
 
 const slotRoute = express.Router();
 
+slotRoute.route("/updateAllSlots").post(slotController.updateAllSlots);
 slotRoute.route("/empty").get(slotController.getAllEmptySlots);
 
 slotRoute.route("/parkingId/:parkingId").get(slotController.getSlotByParkingId);

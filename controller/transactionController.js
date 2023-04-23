@@ -34,7 +34,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
     slot = await Slot.findById(req.body.slot);
     if (!slot) {
       return next(new AppError("Please enter correct Slot ID", 400));
-    } else if (slot.isOccupied) {
+    } else if (slot.isOccupied || slot.isAssigned) {
       return next(new AppError("Slot is already Occupied", 400));
     } else {
       slot = req.body.slot;
@@ -50,7 +50,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
     }
   }
   // UPDATE slot as occupied
-  slot = await Slot.findByIdAndUpdate(slot, { isOccupied: true }, { new: true, runValidators: true });
+  slot = await Slot.findByIdAndUpdate(slot, { isAssigned: true }, { new: true, runValidators: true });
 
   //   find if the vehicle is registered or not
   //   if user is a registered user then update the user field in the transaction
@@ -242,7 +242,7 @@ exports.updateTransactionAndSlotAsUnoccupied = catchAsync(async (req, res, next)
   // Update the current slot as unoccupied
   const slot = await Slot.findByIdAndUpdate(
     transaction[0].slot,
-    { isOccupied: false },
+    { isOccupied: false, isAssigned: false },
     { new: true, runValidators: true }
   );
 
