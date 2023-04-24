@@ -8,6 +8,7 @@ const axios = require("axios");
 
 const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
+const { json } = require("body-parser");
 
 exports.getAllTransaction = catchAsync(async (ref, res, next) => {
   const transactions = await Transaction.find();
@@ -76,9 +77,9 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
   // CREATE a transation
   let transaction = {};
   transaction = await Transaction.create(body);
-  console.log(transaction);
+  // console.log(transaction);
 
-  // Call API for gate open
+  // Call API TO OPEN GATE
   let data1 = JSON.stringify({
     value: "OPEN",
   });
@@ -87,7 +88,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
     maxBodyLength: Infinity,
     url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
     headers: {
-      "X-AIO-Key": "aio_rrRV57lj8Xb1KvbjafTkhp0wWj20",
+      "X-AIO-Key": "aio_bUKL28724ACOCykOgSQphouWkzfK",
       "Content-Type": "application/json",
     },
     data: data1,
@@ -191,24 +192,88 @@ exports.createRazorPayOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.getPayment = catchAsync(async (req, res, next) => {
+  // SEACRCH THE TRANSACTION BASED ON Vehicle Number
   const transaction = await Transaction.find({
     vehicleNo: req.params.vehicleNo,
     isComplete: false,
   });
 
-  // transaction not found
+  // transaction not found - return error
   if (!transaction.length) {
     return next(new AppError("Please Enter Correct Vehicle No", 400));
   }
 
+  // Calculate Amount
   let inTime = new Date(transaction[0].inTime).getTime();
   let outTime = new Date().getTime();
   let stayTime = (outTime - inTime) / 1000; // In HOURS
-  console.log(stayTime);
+  console.log("StayTime = ", stayTime);
   // PAYMENT 1rs per sec
   let Amount = Number(stayTime * 1).toFixed(2);
 
   Amount = Math.max(Amount, 5);
+
+  // IF TRANSACTION HAS user field
+  if (transaction[0].user) {
+    var flag = 0;
+    await User.findOne({ _id: transaction[0].user }).then(async (response) => {
+      // console.log(response);
+      // console.log("Balcance  = ", response.Balance);
+      // console.log("Amount = ", Amount);
+
+      // IF USER has sufficient balance
+      if (response.Balance >= Amount) {
+        const run = async () => {
+          // console.log("run called");
+          // Update Current Transaction as Complete
+          await Transaction.findByIdAndUpdate(transaction[0]._id, {
+            outTime: new Date().toISOString(),
+            amount: Amount,
+            isComplete: true,
+          });
+
+          // Update the current slot as unoccupied
+          await Slot.findByIdAndUpdate(
+            transaction[0].slot,
+            { isOccupied: false, isAssigned: false },
+            { new: true, runValidators: true }
+          );
+
+          // Update the user with the new Balance
+          await User.findOneAndUpdate({ _id: transaction[0].user }, { Balance: response.Balance - Amount });
+
+          // // Call API TO OPEN GATE
+          // let data1 = JSON.stringify({
+          //   value: "OPEN",
+          // });
+          // let config = {
+          //   method: "post",
+          //   maxBodyLength: Infinity,
+          //   url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
+          //   headers: {
+          //     "X-AIO-Key": "aio_bUKL28724ACOCykOgSQphouWkzfK",
+          //     "Content-Type": "application/json",
+          //   },
+          //   data: data1,
+          // };
+          // axios
+          //   .request(config)
+          //   .then((response) => {
+          //     console.log(JSON.stringify(response.data));
+          //   })
+          //   .catch((error) => {
+          //     console.log(error);
+          //   });
+        };
+        await run();
+        flag = 1;
+        // console.log(flag);
+      }
+    });
+    if (flag == 1) {
+      return res.render("success-page");
+    }
+  }
 
   // After Getting the Amount Create a order in RAZORPAY
   var instance = new Razorpay({ key_id: "rzp_test_Oi69HJagINaREZ", key_secret: "V8bz7OLp4lriREQl4xDPsSEa" });
@@ -219,18 +284,7 @@ exports.getPayment = catchAsync(async (req, res, next) => {
   };
   // console.log(options);
 
-  // // Update Current Transaction
-  // await Transaction.findByIdAndUpdate(transaction[0]._id, {
-  //   outTime: new Date().toISOString(),
-  //   isComplete: true,
-  // });
-  // // Update the current slot as unoccupied
-  // const slot = await Slot.findByIdAndUpdate(
-  //   transaction[0].slot,
-  //   { isOccupied: false },
-  //   { new: true, runValidators: true }
-  // );
-
+  // Create RazorPay Instance
   let response;
   instance.orders.create(options, function (err, order) {
     if (err) {
@@ -241,7 +295,6 @@ exports.getPayment = catchAsync(async (req, res, next) => {
         data: response,
       });
     } else {
-      // console.log(order);
       response = order;
       response.amount = Amount * 100;
       response.vehicleNo = req.params.vehicleNo;

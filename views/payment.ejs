@@ -34,15 +34,15 @@
 
                 console.warn(`In production, change the base url in payment.ejs from http://127.0.0.1:4000/api/v1/gate/open to https://prickly-cummerbund-lamb.cyclic.app/api/v1/gate/open`)
                 
-                // Update the Open variable in Gate
-                fetch("https://prickly-cummerbund-lamb.cyclic.app/api/v1/gate/open")
-                .then(response=>response.text())
-                .then(response=>{
-                    console.log(response);
-                })
-                .catch(err=>console.log(err))
+                // // Update the Open variable in Gate
+                // fetch("https://prickly-cummerbund-lamb.cyclic.app/api/v1/gate/open")
+                // .then(response=>response.text())
+                // .then(response=>{
+                //     console.log(response);
+                // })
+                // .catch(err=>console.log(err))
 
-                // Update the Transaction and Slot
+                // // Update the Transaction and Slot
                 fetch("https://prickly-cummerbund-lamb.cyclic.app/api/v1/transactions/updateTransactionAndSlotAsUnoccupied", {
                     method: 'POST',
                     headers: {
@@ -59,10 +59,11 @@
                 /////////////////
                 
                 var myHeaders = new Headers();
+                myHeaders.append("X-AIO-Key", "aio_bUKL28724ACOCykOgSQphouWkzfK");
                 myHeaders.append("Content-Type", "application/json");
 
                 var raw = JSON.stringify({
-                "vehicleNo": "TN-SRM"
+                "value": "OPEN"
                 });
 
                 var requestOptions = {
@@ -72,14 +73,17 @@
                 redirect: 'follow'
                 };
 
-                fetch("https://prickly-cummerbund-lamb.cyclic.app/api/v1/transactions", requestOptions)
+                fetch("https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN", requestOptions)
                 .then(response => response.text())
-                .then(result => console.log(result))
+                .then(result => {
+                    console.log(result)
+                    window.location = '/success-page';
+                })
                 .catch(error => console.log('error', error));
 
                 ////////////////
 
-                window.location = '/success-page';
+                
             },
            "cancel": function() {
                 // This function will be called when the payment is cancelled
