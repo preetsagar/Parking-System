@@ -42,10 +42,12 @@ exports.signUp = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email: email, Passsword: password });
+  let user = await User.findOne({ email: email, Passsword: password });
   if (!user) {
     return next(new AppError("Please Enter correct email and password", 401));
   } else {
+    // UPDATE FCM TOKEN
+    user = await User.findOneAndUpdate({ email }, { fcmToken: req.body.fcmToken });
     return res.status(200).json({
       status: "Success",
       data: {

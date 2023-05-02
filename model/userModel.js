@@ -27,6 +27,9 @@ const userSchema = new mongoose.Schema({
   mobileNo: {
     type: Number,
   },
+  fcmToken: {
+    type: String,
+  },
 });
 
 const User = mongoose.model("User", userSchema);

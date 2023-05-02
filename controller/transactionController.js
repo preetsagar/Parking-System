@@ -25,7 +25,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
   let slot;
   let slotDetails;
 
-  // check weather the vehicle is alraedy parked or not
+  // check weather the vehicle is already parked or not
   const data = await Transaction.findOne({ vehicleNo: req.body.vehicleNo, isComplete: false });
   if (data) {
     return next(new AppError("This vehicle is already parked", 400));
@@ -67,6 +67,38 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
       user: user[0]._id,
       inTime: new Date().toISOString(),
     };
+    // Call API to notify google ///////////////////////////////////////////////////////////////////
+    var axios = require("axios");
+    var data2 = JSON.stringify({
+      to: user[0].fcmToken,
+      // to: "epL0sxcCQXKNiCmFqzo8Tl:APA91bGrePATwA0Wm8qvHIIBZfShjHoA6K40FfPBTe9MiPBgNS-bYLCgsNTXzF1SnpzT6TsXd_KVNI2Mr7Ni7ePPXaLogf1iPRVEori-B7kJS4wNLH8nYM-1HJnBv73We2X7hvEoDNgk",
+      collapse_key: "type_a",
+      priority: "high",
+      notification: {
+        body: `You have been Assigned slot ${slot.slotNumber}`,
+        title: "Slot Details",
+      },
+    });
+
+    var config2 = {
+      method: "post",
+      url: "https://fcm.googleapis.com/fcm/send",
+      headers: {
+        Authorization:
+          "key=AAAAneK6m5Q:APA91bGi8G2jTPHZjwoECoLrF9dZVbOZ2gnylpjBbe2EkaeNPHsWgbi4Yzv-MUTJNdctTLPqxxIhiV-2Z6dVeah1ndzuw7g2I4Oo7pxi22k4T2JS9IIgDQuyqt-QiBmjAf5vIeQ_8xmX",
+        "Content-Type": "application/json",
+      },
+      data: data2,
+    };
+
+    axios(config2)
+      .then(function (response) {
+        console.log(JSON.stringify(response.data));
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////////
   } else {
     body = {
       slot: slot,
@@ -74,7 +106,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
       inTime: new Date().toISOString(),
     };
   }
-  // CREATE a transation
+  // CREATE a transaction
   let transaction = {};
   transaction = await Transaction.create(body);
   // console.log(transaction);
@@ -242,28 +274,28 @@ exports.getPayment = catchAsync(async (req, res, next) => {
           // Update the user with the new Balance
           await User.findOneAndUpdate({ _id: transaction[0].user }, { Balance: response.Balance - Amount });
 
-          // // Call API TO OPEN GATE
-          // let data1 = JSON.stringify({
-          //   value: "OPEN",
-          // });
-          // let config = {
-          //   method: "post",
-          //   maxBodyLength: Infinity,
-          //   url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
-          //   headers: {
-          //     "X-AIO-Key": "aio_bUKL28724ACOCykOgSQphouWkzfK",
-          //     "Content-Type": "application/json",
-          //   },
-          //   data: data1,
-          // };
-          // axios
-          //   .request(config)
-          //   .then((response) => {
-          //     console.log(JSON.stringify(response.data));
-          //   })
-          //   .catch((error) => {
-          //     console.log(error);
-          //   });
+          // Call API TO OPEN GATE
+          let data1 = JSON.stringify({
+            value: "OPEN",
+          });
+          let config = {
+            method: "post",
+            maxBodyLength: Infinity,
+            url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
+            headers: {
+              "X-AIO-Key": "aio_bUKL28724ACOCykOgSQphouWkzfK",
+              "Content-Type": "application/json",
+            },
+            data: data1,
+          };
+          axios
+            .request(config)
+            .then((response) => {
+              console.log(JSON.stringify(response.data));
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         };
         await run();
         flag = 1;
