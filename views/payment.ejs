@@ -46,7 +46,7 @@
                     console.log("Transaction and slot updated after successful payment");
                     ///////////////// API TO OPEN GATE
                     var myHeaders = new Headers();
-                    myHeaders.append("X-AIO-Key", "aio_YBZM427FGt8Mz3yBVb0HZfdb6nC4");
+                    myHeaders.append("X-AIO-Key", '<%= process.env.X_AIO_KEY %>');
                     myHeaders.append("Content-Type", "application/json");
 
                     var raw = JSON.stringify({
@@ -59,6 +59,7 @@
                     body: raw,
                     redirect: 'follow'
                     };
+                    console.log('requestOptions = ', requestOptions);
 
                     fetch("https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN", requestOptions)
                     .then(response => response.text())
