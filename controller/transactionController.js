@@ -68,7 +68,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
       inTime: new Date().toISOString(),
     };
     // Call API to notify google ///////////////////////////////////////////////////////////////////
-    var axios = require("axios");
+
     var data2 = JSON.stringify({
       to: user[0].fcmToken,
       // to: "epL0sxcCQXKNiCmFqzo8Tl:APA91bGrePATwA0Wm8qvHIIBZfShjHoA6K40FfPBTe9MiPBgNS-bYLCgsNTXzF1SnpzT6TsXd_KVNI2Mr7Ni7ePPXaLogf1iPRVEori-B7kJS4wNLH8nYM-1HJnBv73We2X7hvEoDNgk",
@@ -93,10 +93,10 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
 
     axios(config2)
       .then(function (response) {
-        console.log(JSON.stringify(response.data));
+        console.log("Notified through fcm token");
       })
       .catch(function (error) {
-        console.log(error);
+        console.log("ERROR in fcm token", error);
       });
     // ////////////////////////////////////////////////////////////////////////////////////////////////////////
   } else {
@@ -112,23 +112,73 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
   // console.log(transaction);
 
   // Call API TO OPEN GATE
-  let data1 = JSON.stringify({
+  console.log("GATE API IS GOING TO BE CALL");
+  // let data1 = JSON.stringify({
+  //   value: "OPEN",
+  // });
+  // let config = {
+  //   method: "post",
+  //   maxBodyLength: Infinity,
+  //   url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
+  //   headers: {
+  //     "X-AIO-Key": "aio_CIih19VF8hf3OUqYxWaEXZV1TUMo",
+  //     "Content-Type": "application/json",
+  //   },
+  //   data: data1,
+  // };
+  // axios
+  //   .request(config)
+  //   .then((response) => {
+  //     console.log("GATE OPEN SUCCESSFULLY, AFTER VEHICLE ENTERS");
+  //   })
+  //   .catch((error) => {
+  //     console.log("ERROR in Gate Open", error);
+  //   });
+
+  // let data1 = JSON.stringify({
+  //   value: "OPEN",
+  // });
+  // let config = {
+  //   method: "post",
+  //   maxBodyLength: Infinity,
+  //   url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
+  //   headers: {
+  //     "X-AIO-Key": "aio_CIih19VF8hf3OUqYxWaEXZV1TUMo",
+  //     "Content-Type": "application/json",
+  //   },
+  //   data: data1,
+  // };
+  // console.log(config);
+  // axios
+  //   .request(config)
+  //   .then((response) => {
+  //     console.log(response);
+  //     console.log("GATE OPEN SUCCESSFULLY VEHICLE's no plate is assigned");
+  //   })
+  //   .catch((error) => {
+  //     console.log(error);
+  //   });
+
+  let body_data = JSON.stringify({
     value: "OPEN",
   });
+
   let config = {
     method: "post",
     maxBodyLength: Infinity,
     url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
     headers: {
-      "X-AIO-Key": "aio_alzV262QShFZUI0QuNnxJdUaWvPc",
+      "X-AIO-Key": "aio_CIih19VF8hf3OUqYxWaEXZV1TUMo",
       "Content-Type": "application/json",
     },
-    data: data1,
+    data: body_data,
   };
+
   axios
     .request(config)
     .then((response) => {
-      console.log(JSON.stringify(response.data));
+      console.log("GATE OPEN AFTER VEHICLE REACHES");
+      // console.log(JSON.stringify(response.data));
     })
     .catch((error) => {
       console.log(error);
@@ -139,6 +189,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
     status: "Success",
     message: !user.length ? "Not Registered" : "Registered",
     data: {
+      // data: "Ho gya",
       data: { ...transaction._doc, floor: slotDetails.floor, slotNumber: slotDetails.slotNumber },
     },
   });
@@ -245,14 +296,10 @@ exports.getPayment = catchAsync(async (req, res, next) => {
 
   Amount = Math.max(Amount, 5);
 
-  // IF TRANSACTION HAS user field
+  // IF TRANSACTION HAS user field means vehicle is registered
   if (transaction[0].user) {
     var flag = 0;
     await User.findOne({ _id: transaction[0].user }).then(async (response) => {
-      // console.log(response);
-      // console.log("Balcance  = ", response.Balance);
-      // console.log("Amount = ", Amount);
-
       // IF USER has sufficient balance
       if (response.Balance >= Amount) {
         const run = async () => {
@@ -283,7 +330,7 @@ exports.getPayment = catchAsync(async (req, res, next) => {
             maxBodyLength: Infinity,
             url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
             headers: {
-              "X-AIO-Key": "aio_alzV262QShFZUI0QuNnxJdUaWvPc",
+              "X-AIO-Key": "aio_CIih19VF8hf3OUqYxWaEXZV1TUMo",
               "Content-Type": "application/json",
             },
             data: data1,
@@ -291,7 +338,7 @@ exports.getPayment = catchAsync(async (req, res, next) => {
           axios
             .request(config)
             .then((response) => {
-              console.log(JSON.stringify(response.data));
+              console.log("GATE OPEN SUCCESSFULLY AFTER Payment done from wallet");
             })
             .catch((error) => {
               console.log(error);

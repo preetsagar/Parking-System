@@ -32,17 +32,8 @@
 
                 alert("Payment Successful, You can close this tab");
 
-                console.warn(`In production, change the base url in payment.ejs from http://127.0.0.1:4000/api/v1/gate/open to https://prickly-cummerbund-lamb.cyclic.app/api/v1/gate/open`)
-                
-                // // Update the Open variable in Gate
-                // fetch("https://prickly-cummerbund-lamb.cyclic.app/api/v1/gate/open")
-                // .then(response=>response.text())
-                // .then(response=>{
-                //     console.log(response);
-                // })
-                // .catch(err=>console.log(err))
 
-                // // Update the Transaction and Slot
+                // // // Update the Transaction and Slot
                 fetch("https://prickly-cummerbund-lamb.cyclic.app/api/v1/transactions/updateTransactionAndSlotAsUnoccupied", {
                     method: 'POST',
                     headers: {
@@ -52,38 +43,32 @@
                 })
                 .then(response=>response.text())
                 .then(response=>{
-                    console.log(response);
-                })
-                .catch(err=>console.log(err))
+                    console.log("Transaction and slot updated after successful payment");
+                    ///////////////// API TO OPEN GATE
+                    var myHeaders = new Headers();
+                    myHeaders.append("X-AIO-Key", "aio_CIih19VF8hf3OUqYxWaEXZV1TUMo");
+                    myHeaders.append("Content-Type", "application/json");
 
-                /////////////////
-                
-                var myHeaders = new Headers();
-                myHeaders.append("X-AIO-Key", "aio_alzV262QShFZUI0QuNnxJdUaWvPc");
-                myHeaders.append("Content-Type", "application/json");
+                    var raw = JSON.stringify({
+                    "value": "OPEN"
+                    });
 
-                var raw = JSON.stringify({
-                "value": "OPEN"
-                });
+                    var requestOptions = {
+                    method: 'POST',
+                    headers: myHeaders,
+                    body: raw,
+                    redirect: 'follow'
+                    };
 
-                var requestOptions = {
-                method: 'POST',
-                headers: myHeaders,
-                body: raw,
-                redirect: 'follow'
-                };
-
-                fetch("https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN", requestOptions)
-                .then(response => response.text())
-                .then(result => {
-                    console.log(result)
-                    window.location = '/success-page';
-                })
-                .catch(error => console.log('error', error));
-
-                ////////////////
-
-                
+                    fetch("https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN", requestOptions)
+                    .then(response => response.text())
+                    .then(result => {
+                        console.log("GATE OPEN SUCCESSFULLY AFTER Payment Done from Razorpay")
+                        window.location = '/success-page';
+                    })
+                    .catch(error => console.log('Gate open error while doing payment from razorpay', error));
+                    })
+                    .catch(err=>console.log(err))
             },
            "cancel": function() {
                 // This function will be called when the payment is cancelled
