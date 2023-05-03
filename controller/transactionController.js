@@ -120,7 +120,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
     maxBodyLength: Infinity,
     url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
     headers: {
-      "X-AIO-Key": "aio_vPmc247v6KEwknHXpRfi3hgBiWRH",
+      "X-AIO-Key": "aio_cHXc27a0VSyhxaf3Nc8nLkFpkfaP",
       "Content-Type": "application/json",
     },
     data: data1,
