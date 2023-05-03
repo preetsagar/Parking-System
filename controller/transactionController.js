@@ -28,7 +28,8 @@ const openGate = async () => {
       if (error) {
         rej(error);
       } else {
-        res(response.body);
+        // res(response.body);
+        res("OPEN GATE");
       }
       // console.log(response.body);
     });
@@ -370,27 +371,29 @@ exports.getPayment = catchAsync(async (req, res, next) => {
           await User.findOneAndUpdate({ _id: transaction[0].user }, { Balance: response.Balance - Amount });
 
           // Call API TO OPEN GATE
-          let data1 = JSON.stringify({
-            value: "OPEN",
-          });
-          let config = {
-            method: "post",
-            maxBodyLength: Infinity,
-            url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
-            headers: {
-              "X-AIO-Key": process.env.X_AIO_KEY,
-              "Content-Type": "application/json",
-            },
-            data: data1,
-          };
-          await axios
-            .request(config)
-            .then((response) => {
-              console.log("GATE OPEN SUCCESSFULLY AFTER Payment done from wallet");
-            })
-            .catch((error) => {
-              console.log(error);
-            });
+          // let data1 = JSON.stringify({
+          //   value: "OPEN",
+          // });
+          // let config = {
+          //   method: "post",
+          //   maxBodyLength: Infinity,
+          //   url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
+          //   headers: {
+          //     "X-AIO-Key": process.env.X_AIO_KEY,
+          //     "Content-Type": "application/json",
+          //   },
+          //   data: data1,
+          // };
+          // await axios
+          //   .request(config)
+          //   .then((response) => {
+          //     console.log("GATE OPEN SUCCESSFULLY AFTER Payment done from wallet");
+          //   })
+          //   .catch((error) => {
+          //     console.log(error);
+          //   });
+          let result = await openGate();
+          console.log("result for openGate API", result);
         };
         await run();
         flag = 1;
