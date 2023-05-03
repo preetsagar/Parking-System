@@ -10,6 +10,31 @@ const AppError = require("../util/appError");
 const catchAsync = require("../util/catchAsync");
 const { json } = require("body-parser");
 
+const openGate = async () => {
+  return new Promise((res, rej) => {
+    var request = require("request");
+    var options = {
+      method: "POST",
+      url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
+      headers: {
+        "X-AIO-Key": process.env.X_AIO_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        value: "OPEN",
+      }),
+    };
+    request(options, function (error, response) {
+      if (error) {
+        rej(error);
+      } else {
+        res(response.body);
+      }
+      // console.log(response.body);
+    });
+  });
+};
+
 exports.getAllTransaction = catchAsync(async (ref, res, next) => {
   const transactions = await Transaction.find();
   res.status(200).json({
@@ -114,6 +139,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
   // Call API TO OPEN GATE
   console.log("GATE API IS GOING TO BE CALL");
   // let data1 = JSON.stringify({
+
   //   value: "OPEN",
   // });
   // let config = {
@@ -159,33 +185,54 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
   //     console.log(error);
   //   });
 
-  let body_data = JSON.stringify({
-    value: "OPEN",
-  });
+  // let body_data = JSON.stringify({
+  //   value: "OPEN",
+  // });
 
-  let config = {
-    method: "post",
-    maxBodyLength: Infinity,
-    url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
-    headers: {
-      "X-AIO-Key": process.env.X_AIO_KEY,
-      "Content-Type": "application/json",
-    },
-    data: body_data,
-  };
-  console.log(config);
+  // let config = {
+  //   method: "post",
+  //   maxBodyLength: Infinity,
+  //   url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
+  //   headers: {
+  //     "X-AIO-Key": process.env.X_AIO_KEY,
+  //     "Content-Type": "application/json",
+  //   },
+  //   data: body_data,
+  // };
+  // console.log(config);
 
-  axios
-    .request(config)
-    .then((response) => {
-      console.log("GATE OPEN AFTER VEHICLE REACHES");
-      console.log(JSON.stringify(response.data));
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+  // axios
+  //   .request(config)
+  //   .then((response) => {
+  //     console.log("GATE OPEN AFTER VEHICLE REACHES");
+  //     console.log(JSON.stringify(response.data));
+  //   })
+  //   .catch((error) => {
+  //     console.log(error);
+  //   });
 
   // SEND the response
+
+  // var request = require("request");
+  // var options = {
+  //   method: "POST",
+  //   url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
+  //   headers: {
+  //     "X-AIO-Key": process.env.X_AIO_KEY,
+  //     "Content-Type": "application/json",
+  //   },
+  //   body: JSON.stringify({
+  //     value: "OPEN",
+  //   }),
+  // };
+  // request(options, function (error, response) {
+  //   if (error) throw new Error(error);
+  //   console.log(response.body);
+  // });
+
+  let result = await openGate();
+  console.log("result for openGate API", result);
+
   res.status(200).json({
     status: "Success",
     message: !user.length ? "Not Registered" : "Registered",
