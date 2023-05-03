@@ -173,12 +173,13 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
     },
     data: body_data,
   };
+  console.log(config);
 
   axios
     .request(config)
     .then((response) => {
       console.log("GATE OPEN AFTER VEHICLE REACHES");
-      // console.log(JSON.stringify(response.data));
+      console.log(JSON.stringify(response.data));
     })
     .catch((error) => {
       console.log(error);
