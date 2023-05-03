@@ -168,7 +168,7 @@ exports.createATransaction = catchAsync(async (req, res, next) => {
     maxBodyLength: Infinity,
     url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
     headers: {
-      "X-AIO-Key": "aio_CIih19VF8hf3OUqYxWaEXZV1TUMo",
+      "X-AIO-Key": "aio_YBZM427FGt8Mz3yBVb0HZfdb6nC4",
       "Content-Type": "application/json",
     },
     data: body_data,
@@ -330,12 +330,12 @@ exports.getPayment = catchAsync(async (req, res, next) => {
             maxBodyLength: Infinity,
             url: "https://io.adafruit.com/api/v2/parking00/feeds/sw1/data?x=OPEN",
             headers: {
-              "X-AIO-Key": "aio_CIih19VF8hf3OUqYxWaEXZV1TUMo",
+              "X-AIO-Key": "aio_YBZM427FGt8Mz3yBVb0HZfdb6nC4",
               "Content-Type": "application/json",
             },
             data: data1,
           };
-          axios
+          await axios
             .request(config)
             .then((response) => {
               console.log("GATE OPEN SUCCESSFULLY AFTER Payment done from wallet");
